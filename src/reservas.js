@@ -1,0 +1,39 @@
+import express from 'express';
+
+import passport from 'passport';
+
+import morgan from 'morgan';
+
+import fs from 'fs';
+
+import { estrategia, validacion} from './config/passport.js';
+
+import { router as v1salonesRutas } from './v1/rutas/salonesRutas.js';
+import { router as v1ReservasRutas } from './v1/rutas/reservasRutas.js';
+import { router as v1AuthRouter } from './v1/rutas/authRoutes.js';
+
+const app = express();
+
+app.use(express.json());
+
+//passport.use(express.json());
+
+passport.use(estrategia);
+app.use(passport.initialize());
+
+let log = fs.createWriteStream('./access.log', {flags:'a'})
+app.use(morgan('combined'))
+app.use(morgan('combined', {stream:log}))
+
+
+app.use('/api/v1/auth', v1AuthRouter);
+app.use('/api/v1/salones', v1salonesRutas);
+
+app.use('/api/v1/reservas', passport.authenticate('jwt', {session:false}),v1ReservasRutas);
+
+
+
+
+
+export default app;
+ 
